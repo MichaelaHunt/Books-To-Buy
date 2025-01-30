@@ -4,6 +4,7 @@ import { signToken, AuthenticationError } from "../utils/auth.js";
 
 interface UserArgs {
     username: string;
+    id: number;
 }
 
 interface AddUserArgs {
@@ -31,9 +32,13 @@ interface SaveBookArgs {
 
 const resolvers = {
     Query: {
-        user: async (_parent: any, { username }: UserArgs) => {
-            return await User.findOne({ username }).populate('thoughts');
-        }
+        me: async (_parent: any, { username, id }: UserArgs) => {
+            const foundUser = await User.findOne({ _id: id }, { username });
+            if (!foundUser) {
+                throw new Error("Could not find user.");
+            }
+            return foundUser;
+        },
     },
     Mutation: {
         addUser: async (_parent: any, { input }: AddUserArgs) => {
