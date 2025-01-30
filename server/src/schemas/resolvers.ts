@@ -1,5 +1,5 @@
-import { createUser } from "../controllers/user-controller.js";
 import { User, bookSchema } from "../models/index.js";
+import { UserDocument } from "../models/User.js";
 import { signToken, AuthenticationError } from "../utils/auth.js";
 
 interface UserArgs {
@@ -19,6 +19,16 @@ interface LoginUserArgs {
     password: string;
 }
 
+interface SaveBookArgs {
+    input: {
+        authors: string[];
+        description: string,
+        title: string,
+        image: string,
+        link: string
+    }
+}
+
 const resolvers = {
     Query: {
         user: async (_parent: any, { username }: UserArgs) => {
@@ -26,7 +36,7 @@ const resolvers = {
         }
     },
     Mutation: {
-        createUser: async (_parent: any, { input }: AddUserArgs) => {
+        addUser: async (_parent: any, { input }: AddUserArgs) => {
             const user = await User.create({ ...input });
 
             const token = signToken(user.username, user.email, user._id);
@@ -48,11 +58,27 @@ const resolvers = {
 
             return { token, user };
         },
-        saveBook: async (_parent: any, { input }: AddUserArgs) => {
-
+        saveBook: async (_parent: any, { input }: SaveBookArgs, user: UserDocument) => {
+            if (!user) {
+                throw new Error("Not signed in.");
+            }
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $addToSet: { savedBooks: input } },
+                { new: true, runValidators: true }
+            );
+            return updatedUser;
         },
-        removeBook: async (_parent: any, { input }: AddUserArgs) => {
-
+        removeBook: async (_parent: any, bookId: string, user: UserDocument) => {
+            if (!user) {
+                throw new Error("Not signed in.");
+            }
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $pull: { savedBooks: { bookId: bookId } } },
+                { new: true }
+            );
+            return updatedUser;
         }
     }
 };
