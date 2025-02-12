@@ -41,9 +41,11 @@ const SignupForm = ({ }: { handleModalClose: () => void }) => {
       // }
 
       // const { token } = await response.json();
+      console.log("entered try statement");
       const { data } = await addUser({
-        variables: { ...userFormData },
-      });
+        variables: { ...userFormData }
+      });//this line is not working
+      console.log("data: " + data);
 
       Auth.login(data.token);
     } catch (err) {

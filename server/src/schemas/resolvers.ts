@@ -7,14 +7,6 @@ interface UserArgs {
     id: number;
 }
 
-interface AddUserArgs {
-    input: {
-        username: string;
-        email: string;
-        password: string;
-    }
-}
-
 interface LoginUserArgs {
     email: string;
     password: string;
@@ -41,10 +33,10 @@ const resolvers = {
         },
     },
     Mutation: {
-        addUser: async (_parent: any, { input }: AddUserArgs) => {
-            const user = await User.create({ ...input });
+        addUser: async (_parent: any, { username, email, password }: {username: string; email: string; password: string}) => {
+            const user = await User.create({username, email, password});
 
-            const token = signToken(user.username, user.email, user._id);
+            const token = signToken(user.username, user.email, String(user._id));
 
             return { token, user };
         },
